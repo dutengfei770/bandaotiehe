@@ -1,8 +1,596 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Document</title>
+</head>
 <body>
-    <div>as</div>
-    <script >
-        parent.document.querySelector("#notion-app > div > div:nth-child(1) > div > div:nth-child(2) > div.notion-frame > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > a:nth-child(6) > span").innerHTML = '<img src="https://ts1.cn.mm.bing.net/th/id/R-C.da65d0b973a0d1add63a41733fe0ebb2?rik=KUFvNKp1UEpb8Q&riu=http%3a%2f%2ffindicons.com%2ffiles%2ficons%2f2229%2fsocial_media_mini%2f48%2fimdb.png&ehk=vmP6HeWpRyYIWEP3mq6gsQBTbPe39AvmGncPhbp%2f4cg%3d&risl=&pid=ImgRaw&r=0" alt="上海鲜花港 - 郁金香" width="25" height="20" />'
-    </script>
-</body>
 
+    <div class="description">
+        <div id='clock'>
+            <!--鏃堕挓缂栧彿(1,2,....,12)-->
+            <!--鏃堕挓鎸囬拡()-->
+            <ul class='hours'>
+                <li>
+                  <span>
+                    1
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    2
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    3
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    4
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    5
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    6
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    7
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    8
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    9
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    10
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    11
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    12
+                  </span>
+                </li>
+            </ul>
+            <div class='hr-wrapper'>
+                <div class='hand hr'></div>
+            </div>
+            <div class='min-wrapper'>
+                <div class='hand min'></div>
+            </div>
+            <div class='sec-wrapper'>
+                <div class='hand sec'></div>
+            </div>
+        </div>
+        <div class="digital-clock">
+            <div class="date"></div>
+            <div class="week"></div>
+            <div class="time"></div>
+        </div>
+        <div class="percent">鐧惧垎姣旓細</div>
+        <div class="formerly">杩囧幓澶╂暟锛�</div>
+        <!-- <div class="future">骞村墿浣欏ぉ锛�</div> -->
+    </div>
+    <div class="about" id="grid-parent">
+    </div>
+
+<script>
+
+    // ==================================================================骞村害鏃ュ巻========================================================//
+    var month_olympic = [31,29,31,30,31,30,31,31,30,31,30,31]; //闂板勾涓�12涓湀瀵瑰簲鐨勫ぉ鏁�
+    var month_normal = [31,28,31,30,31,30,31,31,30,31,30,31]; //姝ｅ父骞翠唤12涓湀瀵瑰簲鐨勫ぉ鏁�
+    var month_name = ["January","Febrary","March","April","May","June","July","Auguest","September","October","November","December"];
+
+    var now_time = new Date();
+    var now_year = now_time.getFullYear();
+    var now_day = now_time.getDate();
+
+    addMonthTemp();
+    fullYearCalendar();
+
+    function addMonthTemp(){
+        var gridParent = document.getElementById("grid-parent");
+        var str = "";
+        for(var i=1; i<=12; i++){
+            str += `
+                <div class="calendar" id="calenda${i}">
+                    
+                    <div class="body">
+                        <div class="lightgrey body-list">
+                            <ul>
+                                <li>MON</li>
+                                <li>TUE</li>
+                                <li>WED</li>
+                                <li>THU</li>
+                                <li>FRI</li>
+                                <li>SAT</li>
+                                <li>SUN</li>
+                            </ul>
+                        </div>
+                        <div class="darkgrey body-list">
+                            <ul id="days${i}"></ul>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        gridParent.innerHTML = str;
+    }
+
+    function fullYearCalendar(){
+        for(var i=0; i<12; i++){
+            refreshDate(i,now_year,"days"+(i+1));
+        }
+    }
+
+    //鏍规嵁骞存湀鑾峰彇褰撴湀绗竴澶╂槸鍛ㄥ嚑
+    function dayStart(month, year) {
+        var tmpDate = new Date(year, month, 1);
+        return ( tmpDate.getDay() == 0 ? 7 : tmpDate.getDay() );
+    }
+
+    //鏍规嵁骞翠唤鍒ゆ柇鏌愭湀鏈夊灏戝ぉ锛屼富瑕佹槸鍖哄垎闂板勾
+    function daysMonth(month, year) {
+        if (year%4===0&&year%100!==0||year%400===0) {
+            return (month_olympic[month]);
+        } else {
+            return (month_normal[month]);
+        }
+    }
+
+    function refreshDate(my_month,my_year,id){
+        var holder = document.getElementById(id);
+        var str = "";
+        var totalDay = daysMonth(my_month, my_year); //璁＄畻褰撴湀鐨勫ぉ鏁�
+        var firstDay = dayStart(my_month, my_year); //姣忔湀绗竴澶╅兘鏄懆鍑�
+        var myclass;
+        for(var i=1; i<firstDay; i++){ 
+            str += "<li></li>"; //娣诲姞姣忎釜鏈堝墠闈㈢殑绌虹櫧閮ㄥ垎锛屽嵆鑻ユ煇涓湀鐨勭涓€澶╂槸浠庡懆涓夊紑濮嬶紝鍒欏墠闈㈢殑鍛ㄤ竴锛屽懆浜岄渶瑕佺┖鍑烘潵
+        }
+        for(var i=1; i<=totalDay; i++){
+            if((i<now_day && my_year==now_time.getFullYear() && my_month==now_time.getMonth()) || my_year<now_time.getFullYear() || ( my_year==now_time.getFullYear() && my_month<now_time.getMonth())){ 
+                myclass = " class='lightgrey'"; //濡傛灉鏄凡缁忚繃鍘荤殑鏃ユ湡锛屽垯鐢ㄦ祬鐏拌壊鏄剧ず
+            }else if (i==now_day && my_year==now_time.getFullYear() && my_month==now_time.getMonth()){
+                myclass = " class='green greenbox'"; //濡傛灉姝ｅソ鏄粖澶╋紝鍒欑敤缁胯壊鏄剧ず
+            }else{
+                myclass = " class='darkgrey'"; //灏嗘潵鐨勬棩鏈熺敤娣辩伆鑹叉樉绀�
+            }
+            str += "<li"+myclass+">"+i+"</li>"; //
+        }
+        holder.innerHTML = str; //涓烘棩鏈熺殑鍒楄〃鏍囩璁剧疆HTML
+        // ctitle.innerHTML = month_name[my_month]; //璁剧疆褰撳墠鏄剧ず鐨勬湀浠�
+        // cyear.innerHTML = my_year; //璁剧疆褰撳墠鏄剧ず鐨勫勾浠�
+    }
+
+    // ========================================================= 鏁板瓧鏃堕挓 ======================================================= //
+    //璁剧疆瀹氭椂鍣�
+    setInterval(function() {
+        //鏍煎紡鍖栨棩鏈� 骞存湀鏃�
+        var date = document.querySelector('.date');
+        var week = document.querySelector('.week');
+        var time = document.querySelector('.time');
+        var now_date = new Date();
+        var year = now_date.getFullYear();
+        var month = now_date.getMonth() + 1 < 10 ? "0"+(now_date.getMonth() + 1) : now_date.getMonth() + 1;
+        var dates = now_date.getDate() < 10 ? "0"+now_date.getDate() : now_date.getDate();
+        // var arr = ['鏄熸湡鏃�', '鏄熸湡涓€', '鏄熸湡浜�', '鏄熸湡涓�', '鏄熸湡鍥�', '鏄熸湡浜�', '鏄熸湡鍏�', ];
+        var arr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', ];
+        var day = arr[now_date.getDay()];
+        date.innerHTML = (year + '/' + month + '/' + dates);
+        week.innerHTML = (day);
+        time.innerHTML = (getTime());
+    }, 1000);
+
+    //瑕佹眰灏佽涓€涓嚱鏁拌繑鍥炲綋鍓嶇殑鏃跺垎绉� 鏍煎紡锛�08锛�08锛�08
+    function getTime() {
+        var time = new Date();
+        var h = time.getHours();
+        h = h < 10 ? '0' + h : h;
+        var m = time.getMinutes();
+        m = m < 10 ? '0' + m : m;
+        var s = time.getSeconds();
+        s = s < 10 ? '0' + s : s;
+        return h + ':' + m + ':' + s;
+    }
+    // 鏁板瓧鏃堕挓
+    // function JSClock() {
+    //     var time = new Date();
+    //     var hour = time.getHours();
+    //     var minute = time.getMinutes();
+    //     var second = time.getSeconds();
+    //     var temp = "" + (hour > 12 ? hour - 12 : hour);
+    //     if (hour == 0) temp = "12";
+    //     temp += (minute < 10 ? ":0" : ":") + minutes;
+    //     temp += (second < 10 ? ":0" : ":") + second;
+    //     temp += hour >= 12 ? " P.M." : " A.M.";
+    //     return temp;
+    // }
+
+    // ========================================================= 琛ㄧ洏鏃堕挓 ======================================================= //
+    // 鑾峰彇褰撳墠鏃堕棿
+    var dateInfo = new Date();
+    var hr = dateInfo.getHours() > 12 ? dateInfo.getHours() - 12 : dateInfo.getHours(),
+    min = dateInfo.getMinutes(),
+    sec = dateInfo.getSeconds(),
+    milsec = dateInfo.getMilliseconds();
+    var hrAngle = hr * 30 + (min * 6 / 12),
+    minAngle = min * 6 + (sec * 6 / 60),
+    secAngle = sec * 6 + (milsec * 0.36 / 1000);
+
+    // 璁剧疆鎵嬮儴鍖呰绾哥殑鍒濆瑙掑害
+    function setAngle(wrapper, angle) {
+        document.querySelector("." + wrapper).style.transform = "rotate(" + angle + "deg)";
+    }
+    setAngle("hr-wrapper", hrAngle);
+    setAngle("min-wrapper", minAngle);
+    setAngle("sec-wrapper", secAngle);
+
+
+    // ========================================================= 澶╂暟璇︽儏 ======================================================= //
+    function daysDetails(){
+        var today = new Date();
+        var endYear = new Date(1995, 11, 31, 23, 59, 59, 999); // 璁剧疆鏃ュ拰鏈堬紝娉ㄦ剰锛屾湀浠芥槸 0-11
+        var year = today.getFullYear();
+        endYear.setFullYear(today.getFullYear()); // 鎶婂勾璁剧疆涓轰粖骞�
+        var msPerDay = 24 * 60 * 60 * 1000; // 姣忓ぉ鐨勬绉掓暟
+        var daysLeft = (endYear.getTime() - today.getTime()) / msPerDay;
+        var daysLeft = Math.round(daysLeft) - 1; //杩斿洖浠婂勾鍓╀笅鐨勫ぉ鏁�
+        var startYear = new Date(1995, 0, 1, 0, 0, 0, 0); // 璁剧疆鏃ュ拰鏈堬紝娉ㄦ剰锛屾湀浠芥槸 0-11
+        startYear.setFullYear(today.getFullYear()); // 
+        var daysRight = (today.getTime() - startYear.getTime()) / msPerDay;
+        var daysRight = Math.round(daysRight) + 1; // 
+        var percent = document.querySelector('.percent');
+        var formerly = document.querySelector('.formerly');
+        // var future = document.querySelector('.future');
+        percent.innerHTML = Math.round(daysRight / ((year%4===0&&year%100!==0||year%400===0)?366:365) * 10000)/100 + '%';
+        formerly.innerHTML = (daysRight + ' + ' + daysLeft + ' = ' + ((year%4===0&&year%100!==0||year%400===0)?366:365));
+        // future.innerHTML = (daysLeft);
+    }
+    daysDetails();
+    
+    // <!-- <div class="title">
+    //                     <h1 class="green" id="calendar-title">Month</h1>
+    //                     <h2 class="green small" id="calendar-year">Year</h2>
+    //                     <a href="" id="prev">Prev Month</a>
+    //                     <a href="" id="next">Next Month</a>
+    // </div> -->
+
+    // var prev = document.getElementById("prev");
+    // var next = document.getElementById("next");
+    // var ctitle = document.getElementById("calendar-title");
+    // var cyear = document.getElementById("calendar-year");
+
+    // prev.onclick = function(e){
+    //     e.preventDefault();
+    //     my_month--;
+    //     if(my_month<0){
+    //         my_year--;
+    //         my_month = 11;
+    //     }
+    //     refreshDate();
+    // }
+    // next.onclick = function(e){
+    //     e.preventDefault();
+    //     my_month++;
+    //     if(my_month>11){
+    //         my_year++;
+    //         my_month = 0;
+    //     }
+    //     refreshDate();
+    // }
+
+
+
+
+</script>    
+
+<style>
+    html{
+        height: 97%;
+    }
+    body{
+        /* margin-bottom: 0px; */
+        /* width: 1333px;
+        height: 590px; */
+        height: 100%;
+    }
+    .description{
+        width: 150px;
+        height: 100%; 
+        float:left;
+        border: 1px solid rgba(0,0,0,0.1); /* #6ac13c */
+        background:#e9f8df;
+        border-radius:8px;
+        text-align:center;
+        font-family:arial;
+        font-weight:bold;
+        font-size:16px;
+        /* font-variant-emoji: ; */
+        margin-bottom: 300px;
+    }
+    .digital-clock{
+        margin-top: 160px;
+    }
+    .date, .week, .time, .percent, .formerly, .future{
+        margin-top: 3px;
+    }
+    #grid-parent {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        grid-column-gap: 1px;
+        grid-row-gap: 1px;
+        margin-bottom: 3px;
+        margin-left: 167px;
+        /* border: 1px solid rgba(92, 75, 245, 0.8); */
+    }
+    .calendar{
+        width:245px;
+        height:196px;
+        background:#fff;
+        box-shadow:0px 1px 1px rgba(0,0,0,0.1);
+        margin-left: 3px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        /* border: 1px solid rgba(245, 189, 189, 0.8); */
+    }
+    .body-list ul{
+        width:100%;
+        padding-left: 0px;
+        margin-top: 0px;
+        font-family:arial;
+        font-weight:bold;
+        font-size:14px;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+    .body-list ul li{
+        width:14.28%;
+        height:28px;
+        line-height:28px;
+        list-style-type:none;
+        display:block;
+        box-sizing:border-box;
+        float:left;
+        text-align:center;
+        /* border: 1px solid rgba(105, 240, 15, 0.8); */
+    }
+    .lightgrey{
+        color:#a8a8a8; /*璁剧疆宸茬粡杩囧幓鐨勬棩鏈熼鑹�*/
+    }
+    .darkgrey{
+        color:#565656; /*璁剧疆灏嗘潵鐨勬棩鏈熼鑹�*/
+    }
+    .green{
+        color:#6ac13c; /*绫婚€夋嫨鍣細璁剧疆鎵€鏈塩lass灞炴€т负green鐨勬爣绛剧殑鏍峰紡*/
+    }
+    .greenbox{
+        border:1px solid #6ac13c;
+        background:#e9f8df; /*鏃ユ湡褰撳ぉ鐢ㄧ豢鑹茶儗鏅豢鑹叉枃瀛楀姞浠ユ樉绀�*/
+    }
+</style>
+
+<style>
+    /* body {
+        background: rgb(13, 186, 230);
+        color: #333;
+        margin-top: 50px;
+        font-family: Helvetica, sans-serif;
+    } */
+
+    #clock {
+        background: #fff;
+        border: 5px solid #222;
+        border-radius: 50%;
+        position: absolute;
+        width: 130px;
+        height: 130px;
+        margin: auto;
+        top: 15px; 
+        left: 15px;
+    }
+
+    #clock > ul {
+        list-style: none;
+        top: -16px;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        text-align: center;
+        /* border: 11px solid rgb(12, 248, 91); */
+    }
+    .hours li {
+        position: absolute;
+        transform-origin: 50% 100%;
+        height: 80px;
+    }
+    .hours {
+        left: 24px;
+        font-size: 16.3333333333px;
+        letter-spacing: -1.6px;
+        line-height: 45px;
+    }
+    .hours li {
+        width: 80px;
+    }
+    .hours span {
+        display: block;
+    }
+
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 1*/
+    .hours li:nth-of-type(1) {
+    transform: rotate(30deg);
+    }
+    .hours li:nth-of-type(1) span {
+    transform: rotate(-30deg);
+    }
+    .hours li:nth-of-type(2) {
+    transform: rotate(60deg);
+    }
+    .hours li:nth-of-type(2) span {
+    transform: rotate(-60deg);
+    }
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 3*/
+    .hours li:nth-of-type(3) {
+    transform: rotate(90deg);
+    }
+    .hours li:nth-of-type(3) span {
+    transform: rotate(-90deg);
+    }
+    .hours li:nth-of-type(4) {
+    transform: rotate(120deg);
+    }
+    .hours li:nth-of-type(4) span {
+    transform: rotate(-120deg);
+    }
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 5*/
+    .hours li:nth-of-type(5) {
+    transform: rotate(150deg);
+    }
+    .hours li:nth-of-type(5) span {
+    transform: rotate(-150deg);
+    }
+    .hours li:nth-of-type(6) {
+    transform: rotate(180deg);
+    }
+    .hours li:nth-of-type(6) span {
+    transform: rotate(-180deg);
+    }
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 7*/
+    .hours li:nth-of-type(7) {
+    transform: rotate(210deg);
+    }
+    .hours li:nth-of-type(7) span {
+    transform: rotate(-210deg);
+    }
+    .hours li:nth-of-type(8) {
+    transform: rotate(240deg);
+    }
+    .hours li:nth-of-type(8) span {
+    transform: rotate(-240deg);
+    }
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 9 */
+    .hours li:nth-of-type(9) {
+    transform: rotate(270deg);
+    }
+    .hours li:nth-of-type(9) span {
+    transform: rotate(-270deg);
+    }
+    .hours li:nth-of-type(10) {
+    transform: rotate(300deg);
+    }
+    .hours li:nth-of-type(10) span {
+    transform: rotate(-300deg);
+    }
+    /* 浠ヤ笅浠ｇ爜鏈夊姪浜庤璁℃暟瀛� 11*/
+    .hours li:nth-of-type(11) {
+    transform: rotate(330deg);
+    }
+    .hours li:nth-of-type(11) span {
+    transform: rotate(-330deg);
+    }
+    .hours li:nth-of-type(12) {
+    transform: rotate(360deg);
+    }
+    .hours li:nth-of-type(12) span {
+    transform: rotate(-360deg);
+    }
+
+    .hr-wrapper, .min-wrapper, .sec-wrapper {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        left: -100px;
+        top: -100px;
+    }
+
+    .hand {
+        position: absolute;
+        bottom: 50%;
+        transform-origin: 50% 100%;
+    }
+
+    .hr {
+        background: #222;
+        left: 152px;
+        width: 13px;
+        height: 20px;
+        border-radius: 10px;
+        animation: rotateHand 43200s linear infinite;
+    }
+    .hr:after {
+        background: #222;
+        border-radius: 50%;
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: -8px;
+        width: 13px;
+        height: 16px;
+    }
+    .min {
+        background: #222;
+        left: 155px;
+        width: 9px;
+        height: 55px;
+        border-radius: 8px;
+        animation: rotateHand 3600s linear infinite;
+    }
+    .min:after {
+        background: #222;
+        border-radius: 50%;
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: -8px;
+        width: 9px;
+        height: 16px;
+    }
+    .sec {
+        background: #d00;
+        left: 156.5px;
+        width: 5px;
+        height: 60px;
+        border-radius: 8px;
+        animation: rotateHand 60s linear infinite;
+    }
+    .sec:after {
+        background: #d00;
+        border-radius: 50%;
+        content: "";
+        display: block;
+        position: absolute;
+        bottom: -3.5px;
+        width: 5px;
+        height: 7px;
+    }
+
+    @keyframes rotateHand {
+        to {
+            transform: rotate(1turn);
+        }
+    }
+</style>
+      
+</body>
+</html>
